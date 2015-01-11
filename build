@@ -1,0 +1,41 @@
+#!/bin/sh
+
+# hammer build --env VERSION:11.1
+
+workspace_dir=$1
+output_dir=$2
+
+export PATH="$output_dir/bin:$PATH"
+export LIBRARY_PATH="$output_dir/lib:$LIBRARY_PATH"
+
+echo '---> compiling dependency: yasm'
+curl http://www.tortall.net/projects/yasm/releases/yasm-1.3.0.tar.gz -s | tar zx
+cd yasm-1.3.0
+./configure --prefix=$output_dir --disable-debug
+make
+make install
+cd ..
+
+echo '---> compiling dependency: faac'
+curl http://iweb.dl.sourceforge.net/project/faac/faac-src/faac-1.28/faac-1.28.tar.gz -s | tar zx
+cd faac-1.28
+./configure --prefix=$output_dir --disable-debug --disable-dependency-tracking
+make
+make install
+cd ..
+
+# anvil uses cedar, I need cedar-14 for rtmpdump
+# echo '---> compiling:  rtmpdump'
+# git clone git://git.ffmpeg.org/rtmpdump
+# cd rtmpdump
+# make SYS=posix prefix=$output_dir
+# make install prefix=$output_dir
+# cd ..
+
+echo '---> compiling:  libav'
+curl https://libav.org/releases/libav-$VERSION.tar.gz -s | tar zx
+cd libav-$VERSION
+./configure --prefix=$output_dir --extra-cflags=-I$output_dir/include --enable-libfaac --disable-debug --disable-shared --enable-gpl --enable-nonfree --enable-version3 --enable-vda
+make
+make install
+cd ..
